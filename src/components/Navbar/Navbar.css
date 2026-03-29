@@ -1,0 +1,36 @@
+.navbar {
+  position: sticky;
+  top: 1.5rem;
+  margin: 0 2rem;
+  padding: 1rem 2.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 1000;
+  background: rgba(5, 5, 5, 0.8);
+}
+
+.navbar-brand {
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: var(--primary);
+  letter-spacing: -0.05em;
+}
+
+.navbar-links {
+  display: flex;
+  gap: 3rem;
+}
+
+.navbar-links .nav-link {
+  opacity: 0.5;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-main);
+  transition: opacity 0.3s ease;
+}
+
+.navbar-links .nav-link:hover,
+.navbar-links .nav-link.active {
+  opacity: 1;
+}

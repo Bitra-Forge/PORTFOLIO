@@ -1,99 +1,73 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { useState, useEffect, lazy, Suspense, useCallback } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import { supabase } from './lib/supabase';
-import Works from './pages/Works';
-import Admin from './pages/Admin';
-import Contact from './components/Contact';
+import { AuthProvider } from './context';
+import { ToastProvider, useToast } from './components/Toast';
+import Navbar from './components/Navbar';
+import Loader from './components/Loader';
+import SkipLink from './components/SkipLink';
+import SEO from './components/SEO';
+import ErrorBoundary from './components/ErrorBoundary';
 import './index.css';
 
-const Navbar = () => {
+// Lazy load pages for code splitting
+const Works = lazy(() => import('./pages/Works'));
+const Blog = lazy(() => import('./pages/Blog'));
+const Admin = lazy(() => import('./pages/Admin'));
+const Contact = lazy(() => import('./components/Contact'));
+const Skills = lazy(() => import('./components/Skills'));
+const Experience = lazy(() => import('./components/Experience'));
+const ProtectedRoute = lazy(() => import('./components/ProtectedRoute'));
+
+// Loading fallback component
+const PageLoader = () => (
+  <div style={{ minHeight: '50vh' }}>
+    <Loader />
+  </div>
+);
+
+// Wrapper component to handle location-based rendering
+const AppContent = ({ projects, loading, addProject }) => {
   const location = useLocation();
+  const isHomePage = location.pathname === '/';
+
+  if (loading) {
+    return <Loader />;
+  }
 
   return (
-    <nav className="glass animate-slide-down" style={{
-      position: 'sticky',
-      top: '1.5rem',
-      margin: '0 2rem',
-      padding: '1rem 2.5rem',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      zIndex: 1000,
-      background: 'rgba(5, 5, 5, 0.8)',
-    }}>
-      <Link to="/" style={{
-        fontSize: '1.75rem',
-        fontWeight: '900',
-        color: 'var(--primary)',
-        letterSpacing: '-0.05em'
-      }}>BITRA</Link>
-      <div style={{ display: 'flex', gap: '3rem' }}>
-        <Link to="/" className="nav-link" style={{
-          opacity: location.pathname === '/' ? 1 : 0.5,
-          fontWeight: '600',
-          fontSize: '0.95rem',
-          color: 'var(--text-main)'
-        }}>Works</Link>
-      </div>
-    </nav>
+    <ErrorBoundary fallbackMessage="Failed to load page content. Please refresh and try again.">
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/" element={<Works projects={projects} />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route 
+            path="/admin" 
+            element={
+              <ProtectedRoute>
+                <Admin onAdd={addProject} />
+              </ProtectedRoute>
+            } 
+          />
+        </Routes>
+        {isHomePage && (
+          <>
+            <Skills />
+            <Experience />
+            <Contact />
+          </>
+        )}
+      </Suspense>
+    </ErrorBoundary>
   );
 };
 
-const ProtectedAdmin = ({ onAdd }) => {
-  const [authorized, setAuthorized] = useState(false);
-  const [pass, setPass] = useState('');
-
-  if (!authorized) {
-    return (
-      <div className="glass animate-slide-up" style={{ maxWidth: '400px', margin: '10rem auto', padding: '3rem', textAlign: 'center' }}>
-        <h2 style={{ marginBottom: '1.5rem', color: 'var(--primary)' }}>Team Access</h2>
-        <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
-          This area is restricted to BitraForge team members.
-        </p>
-        <input
-          type="password"
-          placeholder="Access Code"
-          value={pass}
-          onKeyDown={(e) => e.key === 'Enter' && (pass === 'bitra2026' ? setAuthorized(true) : alert('Invalid Code'))}
-          onChange={(e) => setPass(e.target.value)}
-          style={{
-            width: '100%',
-            padding: '0.9rem',
-            marginBottom: '1rem',
-            borderRadius: '0.75rem',
-            background: 'rgba(255,255,255,0.03)',
-            border: '1px solid var(--glass-border)',
-            color: 'white',
-            outline: 'none',
-            fontSize: '1rem'
-          }}
-        />
-        <button
-          onClick={() => pass === 'bitra2026' ? setAuthorized(true) : alert('Invalid Code')}
-          style={{
-            background: 'var(--primary)',
-            color: 'white',
-            padding: '0.9rem 2rem',
-            borderRadius: '0.75rem',
-            width: '100%',
-            fontWeight: '700',
-            fontSize: '1rem',
-            transition: 'all 0.3s ease',
-            boxShadow: '0 4px 6px -1px rgba(168, 85, 247, 0.2)'
-          }}
-        >
-          Enter Portal
-        </button>
-      </div>
-    );
-  }
-
-  return <Admin onAdd={onAdd} />;
-};
-
-function App() {
+// Main app logic with toast notifications
+const AppWithToast = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const toast = useToast();
 
   useEffect(() => {
     fetchProjects();
@@ -111,14 +85,21 @@ function App() {
       setProjects(data || []);
     } catch (err) {
       console.error('Error fetching projects:', err.message);
+      // Fallback to localStorage
       const saved = localStorage.getItem('bitra_projects');
-      if (saved) setProjects(JSON.parse(saved));
+      if (saved) {
+        try {
+          setProjects(JSON.parse(saved));
+        } catch (parseErr) {
+          console.error('Error parsing localStorage data:', parseErr);
+        }
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const addProject = async (project) => {
+  const addProject = useCallback(async (project) => {
     try {
       const { data, error } = await supabase
         .from('projects')
@@ -127,40 +108,45 @@ function App() {
 
       if (error) throw error;
       setProjects(prev => [data[0], ...prev]);
-      alert('Artifact deployed successfully to the cloud forge!');
+      toast.success('Artifact deployed successfully to the cloud forge!');
     } catch (err) {
       console.error('Error adding project:', err.message);
+      // Fallback to localStorage
       const newProj = { ...project, id: Date.now() };
-      const updated = [newProj, ...projects];
-      setProjects(updated);
-      localStorage.setItem('bitra_projects', JSON.stringify(updated));
-      alert('Cloud deployment failed. Saved to local terminal instead.');
+      setProjects(prev => {
+        const updated = [newProj, ...prev];
+        localStorage.setItem('bitra_projects', JSON.stringify(updated));
+        return updated;
+      });
+      toast.info('Saved locally. Cloud sync will retry on next load.');
     }
-  };
+  }, [toast]);
 
   return (
     <Router>
+      <SEO />
+      <SkipLink targetId="main-content" />
       <Navbar />
-      <main className="container" style={{ paddingBottom: '4rem' }}>
-        {loading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '12rem' }}>
-            <div className="animate-spin" style={{
-              width: '48px',
-              height: '48px',
-              border: '4px solid rgba(168, 85, 247, 0.1)',
-              borderLeftColor: 'var(--primary)',
-              borderRadius: '50%'
-            }}></div>
-          </div>
-        ) : (
-          <Routes>
-            <Route path="/" element={<Works projects={projects} />} />
-            <Route path="/admin" element={<ProtectedAdmin onAdd={addProject} />} />
-          </Routes>
-        )}
-        {location.pathname === '/' && <Contact />}
+      <main id="main-content" className="container main-content" role="main">
+        <AppContent 
+          projects={projects} 
+          loading={loading} 
+          addProject={addProject} 
+        />
       </main>
     </Router>
+  );
+};
+
+function App() {
+  return (
+    <HelmetProvider>
+      <AuthProvider>
+        <ToastProvider>
+          <AppWithToast />
+        </ToastProvider>
+      </AuthProvider>
+    </HelmetProvider>
   );
 }
 

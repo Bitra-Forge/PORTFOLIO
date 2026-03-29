@@ -1,0 +1,125 @@
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+}
+
+.modal-content {
+  max-width: 900px;
+  width: 100%;
+  background: #0a0a0a;
+  padding: 4rem;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+  background: transparent;
+  color: white;
+  font-size: 2rem;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  line-height: 1;
+  transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.modal-close:hover {
+  color: var(--primary);
+  transform: scale(1.1);
+}
+
+.modal-title {
+  font-size: 3rem;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(to right, #fff, #a855f7);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.modal-tags {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 3rem;
+  flex-wrap: wrap;
+}
+
+.modal-tag {
+  color: var(--primary);
+  font-size: 0.9rem;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.modal-media {
+  border-radius: 1.5rem;
+  overflow: hidden;
+  margin-bottom: 3rem;
+  border: 1px solid var(--glass-border);
+}
+
+.modal-image,
+.modal-video {
+  width: 100%;
+  display: block;
+}
+
+.modal-description {
+  font-size: 1.25rem;
+  line-height: 1.8;
+  color: var(--text-muted);
+  white-space: pre-wrap;
+}
+
+.modal-links {
+  margin-top: 4rem;
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.modal-link {
+  padding: 1rem 2rem;
+  background: var(--primary);
+  color: white;
+  border-radius: 100px;
+  font-weight: bold;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.modal-link:hover {
+  background: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(168, 85, 247, 0.3);
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .modal-content {
+    padding: 2rem;
+  }
+
+  .modal-title {
+    font-size: 2rem;
+  }
+
+  .modal-description {
+    font-size: 1rem;
+  }
+}
