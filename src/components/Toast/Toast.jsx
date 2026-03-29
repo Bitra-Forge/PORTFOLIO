@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useCallback } from 'react';
 import './Toast.css';
 
@@ -18,8 +19,8 @@ const Toast = ({ id, message, type, onClose }) => {
         {type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ'}
       </span>
       <span className="toast-message">{message}</span>
-      <button 
-        className="toast-close" 
+      <button
+        className="toast-close"
         onClick={() => onClose(id)}
         aria-label="Close notification"
       >
@@ -32,6 +33,10 @@ const Toast = ({ id, message, type, onClose }) => {
 export const ToastProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
 
+  const removeToast = useCallback((id) => {
+    setToasts(prev => prev.filter(toast => toast.id !== id));
+  }, []);
+
   const addToast = useCallback((message, type = 'info', duration = 5000) => {
     const id = Date.now();
     setToasts(prev => [...prev, { id, message, type }]);
@@ -43,11 +48,7 @@ export const ToastProvider = ({ children }) => {
     }
 
     return id;
-  }, []);
-
-  const removeToast = useCallback((id) => {
-    setToasts(prev => prev.filter(toast => toast.id !== id));
-  }, []);
+  }, [removeToast]);
 
   const success = useCallback((message, duration) => addToast(message, 'success', duration), [addToast]);
   const error = useCallback((message, duration) => addToast(message, 'error', duration), [addToast]);

@@ -4,7 +4,7 @@ import Loader from '../Loader';
 import './ProtectedRoute.css';
 
 const ProtectedRoute = ({ children }) => {
-  const { user, loading, signIn, signInWithMagicLink, signOut } = useAuth();
+  const { user, loading, signIn, signInWithMagicLink } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -18,7 +18,7 @@ const ProtectedRoute = ({ children }) => {
     setIsSubmitting(true);
 
     const { error } = await signIn(email, password);
-    
+
     if (error) {
       setError(error.message || 'Invalid credentials');
     }
@@ -32,17 +32,13 @@ const ProtectedRoute = ({ children }) => {
     setIsSubmitting(true);
 
     const { error } = await signInWithMagicLink(email);
-    
+
     if (error) {
       setError(error.message || 'Failed to send magic link');
     } else {
       setMessage('Check your email for the login link!');
     }
     setIsSubmitting(false);
-  };
-
-  const handleSignOut = async () => {
-    await signOut();
   };
 
   if (loading) {
@@ -106,8 +102,8 @@ const ProtectedRoute = ({ children }) => {
             required
             disabled={isSubmitting}
           />
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="protected-button"
             disabled={isSubmitting}
           >
@@ -126,8 +122,8 @@ const ProtectedRoute = ({ children }) => {
             required
             disabled={isSubmitting}
           />
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="protected-button"
             disabled={isSubmitting}
           >

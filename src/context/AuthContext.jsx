@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 
@@ -51,7 +52,7 @@ export const AuthProvider = ({ children }) => {
         email,
         password,
       });
-      
+
       if (error) throw error;
       return { data, error: null };
     } catch (error) {
@@ -68,7 +69,7 @@ export const AuthProvider = ({ children }) => {
           emailRedirectTo: `${window.location.origin}/admin`,
         },
       });
-      
+
       if (error) throw error;
       return { data, error: null };
     } catch (error) {
